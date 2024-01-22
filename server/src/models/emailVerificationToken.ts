@@ -1,0 +1,54 @@
+import mongoose, { Model, ObjectId, Schema, model } from "mongoose";
+import { hash, compare } from "bcrypt";
+
+//interface (TS)
+interface EmailVerificationTokenDocument {
+  owner: ObjectId;
+  token: string;
+  createdAt: Date;
+}
+
+interface Methods {
+  compareToken(token: string): Promise<boolean>;
+}
+
+const emailVerifiactionTokenSchema = new Schema<
+  EmailVerificationTokenDocument,
+  {},
+  Methods
+>({
+  owner: {
+    type: mongoose.Types.ObjectId,
+    required: true,
+    ref: "User",
+  },
+  token: {
+    type: String,
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    //Mongo checks for it at every one min(approx), so if we pass one min, it wiil remove after 59sec + 1min
+    expires: 3600, //60min * 60sec = 3600
+    default: Date.now(),
+  },
+});
+
+emailVerifiactionTokenSchema.pre("save", async function (next) {
+  //Hash token
+  if (this.isModified("token")) {
+    this.token = await hash(this.token, 10);
+  }
+
+  next();
+});
+
+emailVerifiactionTokenSchema.methods.compareToken = async function (token) {
+  const result = await compare(token, this.token);
+  return result;
+};
+
+export default model(
+  "EmailVerifiactionToken",
+  emailVerifiactionTokenSchema
+) as Model<EmailVerificationTokenDocument, {}, Methods>;
