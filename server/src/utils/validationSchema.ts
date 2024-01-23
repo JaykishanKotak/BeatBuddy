@@ -56,6 +56,6 @@ export const UpdatePasswordSchema = yup.object().shape({
     .max(24, "Password is too long !")
     .matches(
       /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#\$%\^&\*])[a-zA-Z\d!@#\$%\^&\*]+$/,
-      "Password is too simple !"
+      "Password is too simple, please use alphanumeric with special characters !"
     ),
 });
