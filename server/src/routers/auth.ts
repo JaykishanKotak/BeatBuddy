@@ -4,6 +4,7 @@ import {
   CreateUserSchema,
   TokenAndIDValidation,
   UpdatePasswordSchema,
+  signInValidationSchema,
 } from "#/utils/validationSchema";
 import { validate } from "#/middleware/validate";
 import {
@@ -11,11 +12,11 @@ import {
   generateForgetPasswordLink,
   grantValid,
   sendReVerificationToken,
+  signIn,
   updatePassword,
   verifyEmail,
 } from "#/controllers/user";
-import { verify } from "crypto";
-import { isValidPassResetToken } from "#/middleware/auth";
+import { isValidPassResetToken, mustAuth } from "#/middleware/auth";
 
 const router = Router();
 
@@ -35,4 +36,18 @@ router.post(
   isValidPassResetToken,
   updatePassword
 );
+router.post("/sign-in", validate(signInValidationSchema), signIn);
+
+router.post("/is-auth", mustAuth, (req, res) => {
+  res.json({ profile: req.user });
+});
+
+router.post("/public", (req, res) => {
+  res.json({ message: "You're in public route !" });
+});
+
+router.post("/private", mustAuth, (req, res) => {
+  res.json({ message: "You're in private route !" });
+});
+
 export default router;

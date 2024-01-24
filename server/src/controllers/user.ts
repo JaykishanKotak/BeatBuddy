@@ -1,7 +1,12 @@
 import { RequestHandler } from "express";
+import jwt from "jsonwebtoken";
+import { isValidObjectId } from "mongoose";
 
 import { CreateUser, VerifyEmailRequest } from "#/@types/user";
-import { CreateUserSchema } from "#/utils/validationSchema";
+import {
+  CreateUserSchema,
+  TokenAndIDValidation,
+} from "#/utils/validationSchema";
 import User from "#/models/user";
 import EmailVerificationToken from "#/models/emailVerificationToken";
 import PasswordResetToken from "#/models/passwordResetToken";
@@ -11,9 +16,8 @@ import {
   sendPasswordResetSuccessEmail,
   sendVerificationMail,
 } from "#/utils/mail";
-import { isValidObjectId } from "mongoose";
 import crypto from "crypto";
-import { PASSWORD_RESET_LINK } from "#/utils/variables";
+import { JWT_SECRET, PASSWORD_RESET_LINK } from "#/utils/variables";
 
 export const create: RequestHandler = async (req: CreateUser, res) => {
   const { name, email, password } = req.body;
@@ -188,4 +192,42 @@ export const updatePassword: RequestHandler = async (req, res) => {
 
   sendPasswordResetSuccessEmail(user.name, user.email);
   res.json({ message: "Password reset successfully." });
+};
+
+export const signIn: RequestHandler = async (req, res) => {
+  const { password, email } = req.body;
+
+  const user = await User.findOne({
+    email,
+  });
+
+  //If no User
+  if (!user) {
+    return res.status(403).json({ error: "Email/Password mismatch !" });
+  }
+
+  const matched = await user.comparePassword(password);
+
+  if (!matched) {
+    return res.status(403).json({ error: "Email/Password mismatch !" });
+  }
+
+  //genrate jwt token for later use.
+  const jwtToken = jwt.sign({ userId: user._id }, JWT_SECRET);
+  user.tokens.push(jwtToken);
+
+  await user.save();
+
+  res.json({
+    profile: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      verified: user.verified,
+      avatar: user.avatar?.url,
+      followers: user.followers.length,
+      followings: user.followings.length,
+    },
+    token: jwtToken,
+  });
 };

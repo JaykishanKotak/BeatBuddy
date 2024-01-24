@@ -1,3 +1,4 @@
+import e from "express";
 import { isValidObjectId } from "mongoose";
 import * as yup from "yup";
 
@@ -58,4 +59,12 @@ export const UpdatePasswordSchema = yup.object().shape({
       /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#\$%\^&\*])[a-zA-Z\d!@#\$%\^&\*]+$/,
       "Password is too simple, please use alphanumeric with special characters !"
     ),
+});
+
+export const signInValidationSchema = yup.object().shape({
+  email: yup
+    .string()
+    .email("Invalid email Id !")
+    .required("Email is missing !"),
+  password: yup.string().trim().required("Password is missing !"),
 });
