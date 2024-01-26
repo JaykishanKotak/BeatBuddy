@@ -10,7 +10,7 @@ import {
 import User from "#/models/user";
 import EmailVerificationToken from "#/models/emailVerificationToken";
 import PasswordResetToken from "#/models/passwordResetToken";
-import { genrateOTPToken } from "#/utils/helper";
+import { formatProfile, genrateOTPToken } from "#/utils/helper";
 import {
   sendForgetPasswordLink,
   sendPasswordResetSuccessEmail,
@@ -18,6 +18,9 @@ import {
 } from "#/utils/mail";
 import crypto from "crypto";
 import { JWT_SECRET, PASSWORD_RESET_LINK } from "#/utils/variables";
+import { RequestWithFiles } from "#/middleware/fileParser ";
+import cloudinary from "#/cloud";
+import formidable from "formidable";
 
 export const create: RequestHandler = async (req: CreateUser, res) => {
   const { name, email, password } = req.body;
@@ -230,4 +233,81 @@ export const signIn: RequestHandler = async (req, res) => {
     },
     token: jwtToken,
   });
+};
+
+export const updateProfile: RequestHandler = async (
+  req: RequestWithFiles,
+  res
+) => {
+  const { name } = req.body;
+
+  const avatar = req.files?.avatar as formidable.File;
+
+  const user = await User.findById(req.user.id);
+
+  if (!user) throw new Error("Something went wrong, user not found !");
+
+  if (typeof name !== "string") {
+    return res.status(422).json({ error: "Invalid name !" });
+  }
+
+  if (name.trim().length < 3) {
+    return res.status(422).json({ error: "Invalid name !" });
+  }
+
+  user.name = name;
+
+  if (avatar) {
+    //if already file, remove
+    if (user.avatar?.publicId) {
+      await cloudinary.uploader.destroy(user.avatar?.publicId);
+    }
+    //upload new avatar file
+    const { secure_url, url, public_id } = await cloudinary.uploader.upload(
+      avatar.filepath,
+      {
+        width: 300,
+        height: 300,
+        crop: "thumb",
+        gravity: "face",
+      }
+    );
+
+    user.avatar = {
+      url: secure_url,
+      publicId: public_id,
+    };
+  }
+
+  await user.save();
+  res.json({
+    message: "Profile updated successfully.",
+    profile: formatProfile(user),
+  });
+};
+
+export const sendProfile: RequestHandler = async (req, res) => {
+  res.json({ profile: req.user });
+};
+
+export const logOut: RequestHandler = async (req, res) => {
+  const { fromAll } = req.query;
+
+  const token = req.token;
+  const user = await User.findById(req.user.id);
+
+  if (!user) throw new Error("Something went wrong, user not found !");
+
+  //logout from alll devices
+  // "auth/logout?fromAll=yes"
+  if (fromAll === "yes") {
+    user.tokens = [];
+  } else {
+    user.tokens = user.tokens.filter((t) => t != token);
+  }
+
+  await user.save();
+  res.json({ success: true });
+
+  //logout from single device
 };

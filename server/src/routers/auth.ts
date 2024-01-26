@@ -11,12 +11,17 @@ import {
   create,
   generateForgetPasswordLink,
   grantValid,
+  logOut,
+  sendProfile,
   sendReVerificationToken,
   signIn,
   updatePassword,
+  updateProfile,
   verifyEmail,
-} from "#/controllers/user";
+} from "#/controllers/auth";
 import { isValidPassResetToken, mustAuth } from "#/middleware/auth";
+
+import { RequestWithFiles, fileParser } from "#/middleware/fileParser ";
 
 const router = Router();
 
@@ -38,9 +43,11 @@ router.post(
 );
 router.post("/sign-in", validate(signInValidationSchema), signIn);
 
-router.post("/is-auth", mustAuth, (req, res) => {
-  res.json({ profile: req.user });
-});
+router.post("/is-auth", mustAuth, sendProfile);
+
+router.post("/update-profile", mustAuth, fileParser, updateProfile);
+
+router.post("/logout", mustAuth, logOut);
 
 router.post("/public", (req, res) => {
   res.json({ message: "You're in public route !" });
@@ -51,3 +58,36 @@ router.post("/private", mustAuth, (req, res) => {
 });
 
 export default router;
+
+/*
+router.post("/update-profile", async (req, res) => {
+  //  'content-type': 'application/json', won't work with formidable
+  //only works with "multipart/form-data";
+  console.log(req.headers);
+  const dir = path.join(__dirname, "../public/profiles");
+
+  try {
+    await fs.readdirSync(dir);
+  } catch (error) {
+    //if no dir => create dir
+    await fs.mkdirSync(dir);
+  }
+
+  if (!req.headers["content-type"]?.startsWith("multipart/form-data")) {
+    return res.status(422).json({ error: "Only Accepts form data !" });
+  }
+  //file upload
+  const form = formidable({
+    uploadDir: dir,
+    filename(name, ext, part, form) {
+      return Date.now() + "_" + part.originalFilename;
+    },
+  });
+  form.parse(req, (err, fields, files) => {
+    console.log("Fields : ", fields);
+    console.log("Files : ", files);
+    res.json({ uploaded: true });
+  });
+});
+
+*/
