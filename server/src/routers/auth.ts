@@ -4,7 +4,7 @@ import {
   CreateUserSchema,
   TokenAndIDValidation,
   UpdatePasswordSchema,
-  signInValidationSchema,
+  SignInValidationSchema,
 } from "#/utils/validationSchema";
 import { validate } from "#/middleware/validate";
 import {
@@ -41,7 +41,7 @@ router.post(
   isValidPassResetToken,
   updatePassword
 );
-router.post("/sign-in", validate(signInValidationSchema), signIn);
+router.post("/sign-in", validate(SignInValidationSchema), signIn);
 
 router.post("/is-auth", mustAuth, sendProfile);
 
