@@ -18,6 +18,7 @@ export interface AudioDocument<T = ObjectId> {
   };
   likes: ObjectId[];
   category: categoriesTypes;
+  createdAt: Date;
 }
 
 const audioSchema = new Schema<AudioDocument>(
@@ -56,10 +57,14 @@ const audioSchema = new Schema<AudioDocument>(
       enum: categories,
       default: "Others",
     },
-  },
-  {
-    timestamps: true,
+    createdAt: {
+      type: Date,
+      default: Date.now(),
+    },
   }
+  // {
+  //   timestamps: true,
+  // }
 );
 
 // const Audio = models.Audio || model("Audio", audioSchema);
