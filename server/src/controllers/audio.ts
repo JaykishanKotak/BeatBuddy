@@ -12,8 +12,6 @@ export const createAudio: RequestHandler = async (
   req: CreateAudioRequest,
   res
 ) => {
-  try {
-  } catch (error) {}
   const { title, about, category } = req.body;
 
   const poster = req.files?.poster as formidable.File;
