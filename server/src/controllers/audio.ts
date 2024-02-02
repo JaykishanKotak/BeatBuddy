@@ -35,6 +35,7 @@ export const createAudio: RequestHandler = async (
     category,
     owner: ownerId,
     file: {
+      //we're using secure_url here because ios does not support url without HTTPS
       url: audioRes.secure_url,
       publicId: audioRes.public_id,
     },

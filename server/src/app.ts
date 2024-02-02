@@ -1,5 +1,7 @@
 import express from "express";
 import "dotenv/config";
+import "express-async-errors";
+
 import "./db";
 
 import authRouter from "./routers/auth";
@@ -9,6 +11,7 @@ import playlistRouter from "./routers/playlist";
 import profileRouter from "./routers/profile";
 import historyRouter from "./routers/history";
 import "./utils/schedule";
+import { errorHandler } from "./middleware/error";
 
 const app = express();
 
@@ -26,7 +29,11 @@ app.use("/playlist", playlistRouter);
 app.use("/profile", profileRouter);
 app.use("/history", historyRouter);
 
+//middleware to handle internal server errors
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 9999;
+
 app.listen(PORT, () => {
   console.log("Server is running on PORT " + PORT);
 });

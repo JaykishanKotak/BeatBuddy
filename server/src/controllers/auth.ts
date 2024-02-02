@@ -30,7 +30,15 @@ export const create: RequestHandler = async (req: CreateUser, res) => {
   //     password,
   //   });
   //   newUser.save()
-  CreateUserSchema.validate({ name, email, password }).catch((error) => {});
+  // CreateUserSchema.validate({ name, email, password }).catch((error) => {});
+
+  const oldUser = await User.findOne({
+    email,
+  });
+
+  if (oldUser) {
+    return res.status(403).json({ error: "Email is already in use !" });
+  }
 
   const newUser = await User.create({ name, email, password });
 
@@ -91,6 +99,13 @@ export const sendReVerificationToken: RequestHandler = async (req, res) => {
 
   if (!user) {
     return res.status(403).json({ error: "Invalid request !" });
+  }
+
+  //if user is already verified once
+  if (user.verified) {
+    return res
+      .status(422)
+      .json({ error: "Your account is already verified !" });
   }
 
   //Remove perivious token

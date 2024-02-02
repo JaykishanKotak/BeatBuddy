@@ -3,6 +3,7 @@ import { isValidObjectId } from "mongoose";
 import Audio, { AudioDocument } from "#/models/audio";
 import Favourite from "#/models/favorite";
 import { PopulatedFavList } from "#/@types/audio";
+import { paginationQuery } from "#/@types/misc";
 
 export const toggleFavorite: RequestHandler = async (req, res) => {
   /**
@@ -76,6 +77,72 @@ export const toggleFavorite: RequestHandler = async (req, res) => {
 };
 
 export const getFavourites: RequestHandler = async (req, res) => {
+  const userId = req.user.id;
+
+  const { pageNo = "0", limit = "20" } = req.query as paginationQuery;
+  const favorite = await Favourite.aggregate([
+    {
+      $match: {
+        owner: userId,
+      },
+    },
+    {
+      $project: {
+        audioIds: {
+          $slice: [
+            "$items",
+            parseInt(pageNo) * parseInt(limit),
+            parseInt(limit),
+          ],
+        },
+      },
+    },
+    {
+      $unwind: "$audioIds",
+    },
+    {
+      $lookup: {
+        from: "audios",
+        localField: "audioIds",
+        foreignField: "_id",
+        as: "audioInfo",
+      },
+    },
+    {
+      $unwind: "$audioInfo",
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "audioInfo.owner",
+        foreignField: "_id",
+        as: "ownerInfo",
+      },
+    },
+    {
+      $unwind: "$ownerInfo",
+    },
+    {
+      $project: {
+        _id: 0,
+        id: "$audioInfo._id",
+        title: "$audioInfo.title",
+        about: "$audioInfo.about",
+        category: "$audioInfo.category",
+        file: "$audioInfo.file.url",
+        poster: "$audioInfo.poster.url",
+        owner: {
+          name: "$ownerInfo.name",
+          id: "$ownerInfo._id",
+        },
+      },
+    },
+  ]);
+
+  return res.json(favorite);
+};
+
+export const getFavouritesOld: RequestHandler = async (req, res) => {
   const userId = req.user.id;
 
   /**
