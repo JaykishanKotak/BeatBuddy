@@ -258,7 +258,7 @@ export const getRecentlyPlayed: RequestHandler = async (req, res) => {
   };
 
   const unwindWithIndex = {
-    $unwind: { path: "histories", includeArrayIndex: "index" },
+    $unwind: { path: "$histories", includeArrayIndex: "index" },
   };
 
   const audioLookup = {
