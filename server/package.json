@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "Node server for BeatBuddy Application.",
+  "description": "Node server for Podify Application.",
   "main": "app.ts",
   "scripts": {
     "dev": "tsnd --respawn -r tsconfig-paths/register --pretty --transpile-only ./src/app.ts",

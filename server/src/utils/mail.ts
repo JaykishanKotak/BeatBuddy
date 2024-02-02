@@ -37,14 +37,14 @@ export const sendVerificationMail = async (token: string, profile: Profile) => {
 
   const { userId, email, name } = profile;
 
-  const welcomeMessage = ` Hi ${name}, Welcome to BeatBuddy! There are so much things that we do for the verified user. Use the given OTP to Verify your account !`;
+  const welcomeMessage = ` Hi ${name}, Welcome to Podify! There are so much things that we do for the verified user. Use the given OTP to Verify your account !`;
 
   transport.sendMail({
     to: email,
     from: VERIFICATION_EMAIL,
     subject: "Welcome Message !",
     html: generateTemplate({
-      title: "Welcome to BeatBuddy, Your own music sharing App !",
+      title: "Welcome to Podify, Your own music sharing App !",
       message: welcomeMessage,
       link: "#",
       logo: "cid:logo",
